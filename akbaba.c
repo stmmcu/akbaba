@@ -91,15 +91,14 @@ void* receiver(void *data)
 		while ( (buf = nm_nextpkt(d, &h)) ) {
 			//i = read(d, buf, sizeof(buf));
 			//printf("hlen %d, buffer size %d, bytes read: %d\n", h.len, sizeof(buf));
-			if (1) {
-				eptr = (struct ether_header*)buf;
-				if (ntohs (eptr->ether_type) == ETHERTYPE_IP)
-				{
-					iph = (struct ip*)(buf + sizeof(struct ether_header));
-					//printf("%u -> ",ctr1->hugebuf[iph->ip_src.s_addr] );
-					++ctr1->hugebuf[iph->ip_src.s_addr];
-					//printf("%u \n",ctr1->hugebuf[iph->ip_src.s_addr] );
-					++ctr1->hugebuf[iph->ip_dst.s_addr];
+			eptr = (struct ether_header*)buf;
+			if (ntohs (eptr->ether_type) == ETHERTYPE_IP)
+			{
+				iph = (struct ip*)(buf + sizeof(struct ether_header));
+				//printf("%u -> ",ctr1->hugebuf[iph->ip_src.s_addr] );
+				++ctr1->hugebuf[iph->ip_src.s_addr];
+				//printf("%u \n",ctr1->hugebuf[iph->ip_src.s_addr] );
+				++ctr1->hugebuf[iph->ip_dst.s_addr];
 
 				ctr1->pkts++;
 				ctr1->bytes += h.len;
@@ -109,15 +108,15 @@ void* receiver(void *data)
 	}
 	nm_close(d);
 }
-}
+
 
 void* collector(void *data)
 {
 	struct my_ctrs *ctr1 = (struct my_ctrs *) data;
 
 	while(1) {
-			printf("calculating top ips \n");
-			heap = initHeap(ctr1->hugebuf, TOPIPSIZ);
+		printf("calculating top ips \n");
+		heap = initHeap(ctr1->hugebuf, TOPIPSIZ);
 	}
 }
 
@@ -137,10 +136,10 @@ int main( int arc, char **argv)
 	memset(hugebuf,0,memsiz_byt);
 	if ((int)hugebuf == -1) {
 		printf("ERROR with mmap \n");
-			return -1;
+		return -1;
 	} else
-		printf("%d Gigabytes of memory mapped.\n", memsiz_gig);
-  memset(hugebuf,0,memsiz_byt);
+	printf("%d Gigabytes of memory mapped.\n", memsiz_gig);
+	memset(hugebuf,0,memsiz_byt);
 	ctr = (struct my_ctrs*) malloc(sizeof(struct my_ctrs));
 	ctr->hugebuf = hugebuf;
 	ctr->pkts = 0;
@@ -160,18 +159,18 @@ int main( int arc, char **argv)
 	ipstring = malloc(IPSIZ);
 
 	for(;;) {
-	usleep(1000 * 1000);
-	printf ("\npackets %u, bytes %u, events %u\n", ctr->pkts, ctr->bytes, ctr->events);
-	printf("### TOP IPS\n");
-	int i;
-	for (i = 0; i < TOPIPSIZ; i++) {
-		ipaddr.s_addr = (uint32_t)((heap[i] - ctr->hugebuf));
-		//printf("# %d. IP uint32_t: %u - pointer: %p \n", i, ipaddr.s_addr, (heap[i] - ctr->hugebuf));
-		memset(ipstring, 0, IPSIZ);
-		memcpy(ipstring,inet_ntoa(ipaddr), IPSIZ);
-		printf("#  %d. IP: %s Packets: %u\n", i, ipstring, *heap[i]);
+		usleep(1000 * 1000);
+		printf ("\npackets %u, bytes %u, events %u\n", ctr->pkts, ctr->bytes, ctr->events);
+		printf("### TOP IPS\n");
+		int i;
+		for (i = 0; i < TOPIPSIZ; i++) {
+			ipaddr.s_addr = (uint32_t)((heap[i] - ctr->hugebuf));
+			//printf("# %d. IP uint32_t: %u - pointer: %p \n", i, ipaddr.s_addr, (heap[i] - ctr->hugebuf));
+			memset(ipstring, 0, IPSIZ);
+			memcpy(ipstring,inet_ntoa(ipaddr), IPSIZ);
+			printf("#  %d. IP: %s Packets: %u\n", i, ipstring, *heap[i]);
+		}
+		printf("###\n");
 	}
-	printf("###\n");
-}
 	return 0;
 }
