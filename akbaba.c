@@ -109,6 +109,7 @@ void* receiver(void *data)
 	}
 	nm_close(d);
 }
+}
 
 void* collector(void *data)
 {
